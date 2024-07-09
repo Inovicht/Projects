@@ -1,2 +1,2 @@
 # Projects
-Different projects I have developed
+This respository show the different projects I have made so far
