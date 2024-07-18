@@ -1,0 +1,14 @@
+function params = params
+meh = 1;
+% x_1 = q(1);
+% y_1 = q(2);
+% theta_1 = q(3);
+% x_2 = q(4);
+% y_2 = q(5);
+% theta_2 = q(6);
+% x_dot_1 = q_dot(1);
+% y_dot_1 = q_dot(2);
+% theta_dot_1 = q_dot(3);
+% x_dot_2 = q_dot(4);
+% y_dot_2 = q_dot(5);
+% theta_dot_3 = q_dot(6);
