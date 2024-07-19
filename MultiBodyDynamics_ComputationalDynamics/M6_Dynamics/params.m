@@ -8,7 +8,7 @@ params.J2 = params.m2/12*params.L2^2;
 params.J3 = params.m3/12*params.L3^2;
 params.g  = 9.81;
 params.G = 6;
-params.K0 = 2500;
+params.K0 = 350;
 params.C0 = 80;
 
 % params = params;

@@ -29,10 +29,9 @@ class SteepestDescend: # Remove Class - make function
             k = k+1
         return self.x,k
         
-f = lambda x: add(power(x[0],2),power(x[1],2))
-g = lambda x: array([multiply(2,x[0]),multiply(2,x[1])])
-x0 = array([0,0])
-n = 2
+#f = lambda x: add(power(x[0],2),power(x[1],2))
+#g = lambda x: array([multiply(2,x[0]),multiply(2,x[1])])¤x0 = array([0,0])
+#n = 2
 
 # f = lambda x: 1000*x[0]**2+100*x[1]**2+10*x[2]**2+x[3]**2+100*x[0]+10*x[1]+x[2]+0.1*x[3]
 # g = lambda x: array([2000*x[0]+100,200*x[1]+10,20*x[2]+1,1.1+x[3]*0])

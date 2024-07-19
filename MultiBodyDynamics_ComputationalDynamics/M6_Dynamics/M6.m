@@ -1,5 +1,5 @@
 close all; clear all;
-tspan = 0:0.001:10;
+tspan = 0:0.001:5;
 params = params;
 L_2 = params.L2;
 L_3 = params.L3;
@@ -66,37 +66,37 @@ for i = 1:length(tspan)
     P4(i,:) = [q(i,4);q(i,5)] + A(q(i,6))*[L_3/2;0];  % Third arm right point
 end
 
-% figure(1)% Live Trajectory
-% hold on
-% grid on
-% title('Live Trajectory')
-% xlabel('X-axis')
-% ylabel('Y-axis')
-% xlim([-4 8])
-% ylim([-4 5])
-% tic
-% for p = 1:length(tspan)
-%     Body1 = line([P1(p,1) P2(p,1)], [P1(p,2) P2(p,2)]);
-%     Body1.Color = 'r';
-%     Body2 = line([P3(p,1) P4(p,1)], [P3(p,2) P4(p,2)]);
-%     Body2.Color = 'b';
-%     Body3 = line([0 P1(p,1)], [0 P1(p,2)]);
-%     Body3.Color = 'm';
-%     pause(0.000001)
-%     delete(Body1);
-%     delete(Body2);
-%     delete(Body3);
-% end
-% toc
-% plot(q(p,1),q(p,2),'ro-');
-% plot(q(p,4),q(p,5),'bo-');
-% Body1 = line([P1(end,1) P2(end,1)], [P1(end,2) P2(end,2)]);
-% Body1.Color = 'r';
-% Body2 = line([P3(end,1) P4(end,1)], [P3(end,2) P4(end,2)]);
-% Body2.Color = 'b';
-% Body3 = line([0 P1(end,1)], [0 P1(end,2)]);
-% Body3.Color = 'm';
-% hold off
+figure(1)% Live Trajectory
+hold on
+grid on
+title('Live Trajectory')
+xlabel('X-axis')
+ylabel('Y-axis')
+xlim([-4 8])
+ylim([-4 5])
+tic
+for p = 1:length(tspan)
+    Body1 = line([P1(p,1) P2(p,1)], [P1(p,2) P2(p,2)]);
+    Body1.Color = 'r';
+    Body2 = line([P3(p,1) P4(p,1)], [P3(p,2) P4(p,2)]);
+    Body2.Color = 'b';
+    Body3 = line([0 P1(p,1)], [0 P1(p,2)]);
+    Body3.Color = 'm';
+    pause(0.000001)
+    delete(Body1);
+    delete(Body2);
+    delete(Body3);
+end
+toc
+plot(q(p,1),q(p,2),'ro-');
+plot(q(p,4),q(p,5),'bo-');
+Body1 = line([P1(end,1) P2(end,1)], [P1(end,2) P2(end,2)]);
+Body1.Color = 'r';
+Body2 = line([P3(end,1) P4(end,1)], [P3(end,2) P4(end,2)]);
+Body2.Color = 'b';
+Body3 = line([0 P1(end,1)], [0 P1(end,2)]);
+Body3.Color = 'm';
+hold off
 % 
 % Trajectory
 % figure(2)

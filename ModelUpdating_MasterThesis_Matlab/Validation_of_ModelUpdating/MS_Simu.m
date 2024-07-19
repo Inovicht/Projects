@@ -51,8 +51,8 @@ for i = 1:max_it
     n = 1:size(y,2);
     sys_id= SysID(fs,uk,y,params);
     lambda_NO_MI = findl(sys_nom.lambdapl,sys_id,params);
-    % sys_id_OD= SysID(3*ns,fs,uk,y);                        %We conduct sysID with higher model order
-    % sys_id = TruncateSysID(sys_nom.lambda,sys_id_OD);    %We now truncate the higher order SysID to order ns
+    % sys_id_OD= SysID(3*ns,fs,uk,y);                        % We conduct sysID with higher model order
+    % sys_id = TruncateSysID(sys_nom.lambda,sys_id_OD);      % We now truncate the higher order SysID to order ns
     lambda_temp = findl(sys_nom.lambdapl,sys_id,params);
     [abs(sys_nom.lambdapl-lambda_NO_MI),abs(sys_nom.lambdapl-lambda_temp)]
     for j = 1:n_dof
