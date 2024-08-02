@@ -1,0 +1,202 @@
+clear all; close all; clc;
+
+% Parameters
+m = [5,1];
+L = [3;5];
+g = 9.81; % Gravitational acceleration
+init = [pi, pi, 0, 0];
+tspan = [0 10];
+
+% Desired angles
+desired_angles = [0; 0];  % Target angles for theta_1 and theta_2
+
+% Mass and stiffness matrix
+M = [L(1)^2*m(1) + L(1)^2*m(2), L(1)*L(2)*m(2);
+     L(1)*L(2)*m(2), L(2)^2*m(2)];
+K = g*[L(1)*m(1) + L(1)*m(2), 0;
+       0, L(2)*m(2)];
+
+A = [zeros(length(M)), eye(length(M));
+     -M\K, zeros(length(M))];
+[B,B2] = Bmat(M,[1,2]);
+
+% Initial guesses for Q and R
+Q0 = diag([10, 10, 1, 1]);
+R0 = 1;
+
+epsilon = 1e-5;
+
+% Optimization options
+options = optimoptions('fmincon', 'Display', 'iter', 'Algorithm', 'sqp', 'MaxIterations', 1000);
+
+% Optimization problem
+x0 = [diag(Q0); R0]; % Initial guess for optimization variables
+lb = epsilon * ones(size(x0)); % Lower bounds to ensure positive definiteness
+ub = Inf(size(x0));   % Upper bounds
+
+% Objective function
+obj_fun = @(x) lqr_objective(x, A, B, init, tspan, desired_angles);
+
+% Optimize
+x_opt = fmincon(obj_fun, x0, [], [], [], [], lb, ub, [], options);
+
+% Extract optimized Q and R
+Q_opt = diag(x_opt(1:4));
+R_opt = x_opt(5);
+
+% Compute optimized LQR gain matrix
+K_lqr_opt = lqr(A, B, Q_opt, R_opt);
+
+% Simulate with optimized LQR controller
+[t,y] = Dpendulum_simulation(A, B, init, tspan, K_lqr_opt, desired_angles,L);
+
+% Define the objective function for optimization
+function cost = lqr_objective(x, A, B, init, tspan, desired_angles)
+    % Extract Q and R from optimization variables
+    Q = diag(x(1:4));
+    R = x(5);
+    
+    % Ensure Q and R are positive definite
+    if min(eig(Q)) <= 0 || R <= 0
+        cost = Inf;
+        return;
+    end
+    
+    % Compute LQR gain matrix
+    try
+        K_lqr = lqr(A, B, Q, R);
+    catch
+        cost = Inf;
+        return;
+    end
+    
+    % Simulate the system with LQR control
+    [t, y] = ode45(@(t, y) double_pendulum_ode(t, y, A, B, K_lqr, desired_angles), tspan, init);
+    
+    % Calculate the tracking error
+    tracking_error = y(:, 1:2) - desired_angles';  % Error in theta_1 and theta_2
+    
+    % Define performance metrics (e.g., integrated square error)
+    cost = trapz(t, sum(tracking_error.^2, 2));
+end
+
+function [t,y] = Dpendulum_simulation(A, B, init, tspan, K_lqr, desired_angles,L)
+    % Solve the ODEs with LQR control
+    options = odeset('RelTol', 1e-8, 'AbsTol', 1e-10); % Relaxing the tolerances
+    [t, y] = ode45(@(t, y) double_pendulum_ode(t, y, A, B, K_lqr, desired_angles), tspan, init);
+    % AmpFrec_analysis(t, y);
+    % compute_omega_n(M, K); % Optional: Compute natural frequencies
+    % animate_double_pendulum(t, y, L); % Optional: Animate double pendulum
+    % plot_dynamics(t,y)
+end
+
+function dydt = double_pendulum_ode(t, y, A, B, K_lqr, desired_angles)
+    % State vector
+    x = y;
+
+    % Control input (LQR)
+    u = -K_lqr * (x - [desired_angles; 0; 0]);  % Incorporate desired angles into control law
+
+    % State-space equation
+    dydt = A * x + B * u;
+end
+function [B,B2] = Bmat(M,b)
+
+n = length(M);
+r = length(b);
+B2 = zeros(n,r);
+k = 1;
+
+for i = 1:length(b)
+    B2(b(i),k) = 1;
+    k = k + 1;
+end
+
+B = [zeros(n,r);inv(M)*B2];
+end
+
+function [omega_n_Hz, eigenvectors] = compute_omega_n(A)
+    % Compute the eigenvalues and eigenvectors of the state-space matrix A
+    [eigenvectors, eigenvalues] = eig(A);
+    
+    % Extract the eigenvalues from the diagonal matrix
+    eigenvalues = diag(eigenvalues);
+    
+    % Compute the natural frequencies (in rad/s)
+    natural_frequencies_rad_per_s = abs(eigenvalues);
+    
+    % Convert the natural frequencies to Hertz (Hz)
+    omega_n_Hz = natural_frequencies_rad_per_s / (2 * pi);
+    
+    % Display the natural frequencies in Hz
+    disp('The natural frequencies (Hz) of the system are:');
+    disp(omega_n_Hz);
+    
+    % Display the eigenvectors (mode shapes)
+    disp('The eigenvectors (mode shapes) of the system are:');
+    disp(eigenvectors);
+end
+
+function AmpFrec_analysis(t,y)
+    [frec, amp] = amplitudeSpectrumOneSided(t,y);
+    semilogy(frec,amp);
+end
+
+function animate_double_pendulum(t, y, L)
+    l1 = L(1);
+    l2 = L(2);
+    % Create a figure for the animation
+    figure;
+    hold on;
+    axis equal;
+    axis([-2*(l1+l2) 2*(l1+l2) -2*(l1+l2) 2*(l1+l2)]);
+    plot([-2*(l1+l2) 2*(l1+l2)], [0 0], 'k'); % ground line
+    
+    % Loop through the time steps to create the animation
+    for i = 1:length(t)
+        theta1 = y(i, 1);
+        theta2 = y(i, 2);
+        
+        % Positions of the pendulums
+        x1 = l1 * sin(theta1);
+        y1 = -l1 * cos(theta1);
+        x2 = x1 + l2 * sin(theta2);
+        y2 = y1 - l2 * cos(theta2);
+        
+        % Plot the pendulum
+        plot([0, x1], [0, y1], 'r', 'LineWidth', 2); % first rod
+        plot([x1, x2], [y1, y2], 'b', 'LineWidth', 2); % second rod
+        plot(x1, y1, 'ro', 'MarkerSize', 10, 'MarkerFaceColor', 'r'); % first mass
+        plot(x2, y2, 'bo', 'MarkerSize', 10, 'MarkerFaceColor', 'b'); % second mass
+        
+        drawnow;
+        
+        % Clear the figure except the ground line for the next frame
+        if i < length(t)
+            clf;
+            hold on;
+            axis equal;
+            axis([-2*(l1+l2) 2*(l1+l2) -2*(l1+l2) 2*(l1+l2)]);
+            plot([-2*(l1+l2) 2*(l1+l2)], [0 0], 'k'); % ground line
+        end
+    end
+end
+
+function plot_dynamics(t,y)
+    % Plot the results
+    subplot(2,1,1);
+    plot(t, y(:, 1), 'r', t, y(:, 2), 'b');
+    title('Double Pendulum Simulation');
+    xlabel('Time (s)');
+    ylabel('Angle (rad)');
+    legend('$\theta_1$', '$\theta_2$', 'Interpreter', 'latex');
+    
+    subplot(2,1,2);
+    plot(t, y(:, 3), 'r', t, y(:, 4), 'b');
+    xlabel('Time (s)');
+    ylabel('Angular Velocity (rad/s)');
+    legend('$\dot{\theta}_1$', '$\dot{\theta}_2$', 'Interpreter', 'latex');
+end
+
+
+
